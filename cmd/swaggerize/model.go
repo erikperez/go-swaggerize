@@ -7,7 +7,7 @@ type SwaggerModel struct {
 	BasePath            string                               `json:"basePath"`
 	Tags                []SwaggerTag                         `json:"tags"`
 	Schemes             []string                             `json:"schemes"`
-	Paths               map[string]SwaggerPathItem           `json:"paths"`
+	Paths               map[string]SwaggerPathMethods        `json:"paths"`
 	Definitions         map[string]SwaggerDefinition         `json:"definitions,omitempty"`
 	SecurityDefinitions map[string]SwaggerSecurityDefinition `json:"securityDefinitions,omitempty"`
 	ExternalDocs        *SwaggerExternalDocs                 `json:"externalDocs,omitempty"`
@@ -19,7 +19,7 @@ func NewSwagger(host string, basePath string) *SwaggerModel {
 		Host:                host,
 		BasePath:            basePath,
 		Tags:                []SwaggerTag{},
-		Paths:               make(map[string]SwaggerPathItem),
+		Paths:               make(map[string]SwaggerPathMethods),
 		Definitions:         make(map[string]SwaggerDefinition),
 		SecurityDefinitions: make(map[string]SwaggerSecurityDefinition),
 		Schemes:             []string{},
@@ -47,11 +47,11 @@ func (s *SwaggerModel) setDefinitions(definitions map[string]SwaggerDefinition) 
 	s.Definitions = definitions
 	return s
 }
-func (s *SwaggerModel) addPath(name string, definition SwaggerPathItem) *SwaggerModel {
+func (s *SwaggerModel) addPath(name string, definition SwaggerPathMethods) *SwaggerModel {
 	s.Paths[name] = definition
 	return s
 }
-func (s *SwaggerModel) setPaths(paths map[string]SwaggerPathItem) *SwaggerModel {
+func (s *SwaggerModel) setPaths(paths map[string]SwaggerPathMethods) *SwaggerModel {
 	s.Paths = paths
 	return s
 }
@@ -109,6 +109,13 @@ type SwaggerPathItem struct {
 	Parameters  []SwaggerPathItemParameter           `json:"parameters,omitempty"`
 	Responses   map[string]SwaggerPathResponse       `json:"responses,omitempty"`
 	Security    map[string]SwaggerSecurityDefinition `json:"security,omitempty"`
+}
+
+type SwaggerPathMethods struct {
+	Post   *SwaggerPathItem `json:"post,omitempty"`
+	Get    *SwaggerPathItem `json:"get,omitempty"`
+	Put    *SwaggerPathItem `json:"put,omitempty"`
+	Delete *SwaggerPathItem `json:"delete,omitempty"`
 }
 
 type SwaggerPathItemParameter struct {

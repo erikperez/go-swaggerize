@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-type model struct {
+type message struct {
 	MessageID   string `json:"messageid"`
 	ServiceID   int    `json:"serviceid"`
 	ServiceName string `json:"servicename"`
@@ -17,31 +17,66 @@ type model struct {
 func main() {
 
 	// path := "/send"
-	m := model{}
 
+	//Example usage:
+	routes := []SwaggerizeRoute{}
+	routes = append(routes, SwaggerizeRoute{
+		Group: "send",
+		Route: "/send/message",
+		Verb:  "post",
+		Model: message{},
+	})
+	swaggerize(routes)
+
+}
+
+type SwaggerizeRoute struct {
+	Group string
+	Route string
+	Verb  string
+	Model interface{}
+}
+
+func swaggerize(routes []SwaggerizeRoute) {
 	swag := NewSwagger("sms.admin.prisguiden.no", "/")
 	swag.setInfo(&SwaggerInfo{
 		Title: "tester",
 		// License: &SwaggerLicense{},
-		Contact: &SwaggerContact{},
+		// Contact: &SwaggerContact{},
 	})
-	swag.addTag(SwaggerTag{Name: "send"})
-	swag.addDefinition(parseStructToDefinition(m))
+	for _, route := range routes {
 
-	swaggerpath := SwaggerPath{}
-	swaggerpath.addVerb("post", SwaggerPathItem{Tags: []string{"send"}, Consumes: []string{"application/json"}})
+		swag.addTag(SwaggerTag{Name: route.Group})
+		str, def := parseStructToDefinition(route.Model)
+		swag.addDefinition(str, def)
 
-	// swag.addPath(path, swaggerpath)
+		defaultResponse := getDefaultResponse()
+		swag.addPath(route.Route, SwaggerPathMethods{
+			Post: &SwaggerPathItem{Tags: []string{route.Group},
+				Consumes:  []string{"application/json"},
+				Produces:  []string{"application/json"},
+				Responses: defaultResponse,
+				Parameters: []SwaggerPathItemParameter{
+					SwaggerPathItemParameter{
+						In:       "body",
+						Name:     "body",
+						Required: true,
+						Schema:   SwaggerSchema{Ref: "#/definitions/message"},
+					},
+				},
+			}},
+		)
 
-	out, _ := json.Marshal(swag)
-	fmt.Println(string(out))
+		out, _ := json.Marshal(swag)
+		fmt.Println(string(out))
+	}
 
-	// val := reflect.Indirect(reflect.ValueOf(m))
-	// fmt.Println(val.Type().Name())
-	// for i := 0; i < val.NumField(); i++ {
-	// 	field := val.Type().Field(i)
-	// 	fmt.Println(field.Name, field.Type)
-	// }
+}
+
+func getDefaultResponse() map[string]SwaggerPathResponse {
+	defaultResponse := make(map[string]SwaggerPathResponse)
+	defaultResponse["default"] = SwaggerPathResponse{Description: "Default response"}
+	return defaultResponse
 }
 
 func parseStructToDefinition(v interface{}) (string, SwaggerDefinition) {
