@@ -16,8 +16,12 @@ type message struct {
 
 func main() {
 
-	// path := "/send"
-
+	swag := NewSwagger("sms.admin.prisguiden.no", "/")
+	swag.setInfo(&SwaggerInfo{
+		Title: "tester",
+		// License: &SwaggerLicense{},
+		// Contact: &SwaggerContact{},
+	})
 	//Example usage:
 	routes := []SwaggerizeRoute{}
 	routes = append(routes, SwaggerizeRoute{
@@ -26,7 +30,7 @@ func main() {
 		Verb:  "post",
 		Model: message{},
 	})
-	swaggerize(routes)
+	swaggerize(swag, routes)
 
 }
 
@@ -37,15 +41,8 @@ type SwaggerizeRoute struct {
 	Model interface{}
 }
 
-func swaggerize(routes []SwaggerizeRoute) {
-	swag := NewSwagger("sms.admin.prisguiden.no", "/")
-	swag.setInfo(&SwaggerInfo{
-		Title: "tester",
-		// License: &SwaggerLicense{},
-		// Contact: &SwaggerContact{},
-	})
+func swaggerize(swag *SwaggerModel, routes []SwaggerizeRoute) {
 	for _, route := range routes {
-
 		swag.addTag(SwaggerTag{Name: route.Group})
 		str, def := parseStructToDefinition(route.Model)
 		swag.addDefinition(str, def)
@@ -61,7 +58,7 @@ func swaggerize(routes []SwaggerizeRoute) {
 						In:       "body",
 						Name:     "body",
 						Required: true,
-						Schema:   SwaggerSchema{Ref: "#/definitions/message"},
+						Schema:   SwaggerSchema{Ref: "#/definitions/" + str},
 					},
 				},
 			}},
