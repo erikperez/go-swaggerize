@@ -48,7 +48,7 @@ func swaggerize(swag *SwaggerModel, routes []SwaggerizeRoute) {
 		swag.addDefinition(str, def)
 
 		defaultResponse := getDefaultResponse()
-		swag.addPath(route.Route, SwaggerPathMethods{
+		swaggerPathMethods := SwaggerPathMethods{
 			Post: &SwaggerPathItem{Tags: []string{route.Group},
 				Consumes:  []string{"application/json"},
 				Produces:  []string{"application/json"},
@@ -61,8 +61,8 @@ func swaggerize(swag *SwaggerModel, routes []SwaggerizeRoute) {
 						Schema:   SwaggerSchema{Ref: "#/definitions/" + str},
 					},
 				},
-			}},
-		)
+			}}
+		swag.addPath(route.Route, swaggerPathMethods)
 
 		out, _ := json.Marshal(swag)
 		fmt.Println(string(out))
