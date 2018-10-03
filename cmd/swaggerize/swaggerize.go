@@ -8,10 +8,14 @@ import (
 )
 
 type message struct {
-	MessageID   string `json:"messageid"`
+	MessageID   string `json:"messageid" swagger:"required:true;in:query;"`
 	ServiceID   int    `json:"serviceid"`
 	ServiceName string `json:"servicename"`
 	Sno         string `json:"sno"`
+}
+
+type getStatus struct {
+	Status []string `json:"status" swagger:"required:true;in:query;multiple:true;enum:['available','pending','sold']"`
 }
 
 func main() {
@@ -30,6 +34,13 @@ func main() {
 		Verb:  "post",
 		Model: message{},
 	})
+	routes = append(routes, SwaggerizeRoute{
+		Group: "status",
+		Route: "/status",
+		Verb:  "get",
+		Model: getStatus{},
+	})
+
 	swaggerize(swag, routes)
 
 }
@@ -43,25 +54,63 @@ type SwaggerizeRoute struct {
 
 func swaggerize(swag *SwaggerModel, routes []SwaggerizeRoute) {
 	for _, route := range routes {
-		swag.addTag(SwaggerTag{Name: route.Group})
-		str, def := parseStructToDefinition(route.Model)
-		swag.addDefinition(str, def)
 
-		defaultResponse := getDefaultResponse()
+		if route.Group != "" {
+			swag.addTag(SwaggerTag{Name: route.Group})
+		}
+		var modelName string
+		// if route.Model != nil {
+		modelName, def := parseStructToDefinition(route.Model)
+		swag.addDefinition(modelName, def)
+		// }
+
+		var postMethod *SwaggerPathItem
+		var getMethod *SwaggerPathItem
+		var putMethod *SwaggerPathItem
+		var deleteMethod *SwaggerPathItem
+
+		if route.Verb == "post" {
+			postMethod = &SwaggerPathItem{Tags: []string{route.Group},
+				Consumes:   []string{"application/json"},
+				Produces:   []string{"application/json"},
+				Responses:  getDefaultResponse(),
+				Parameters: []SwaggerPathItemParameter{},
+			}
+
+			hasModel := len(swag.Definitions) > 0
+			if hasModel {
+				postMethod.addParameter(SwaggerPathItemParameter{
+					In:       "body",
+					Name:     "body",
+					Required: true,
+					Schema:   &SwaggerSchema{Ref: "#/definitions/" + modelName},
+				})
+			}
+		} else if route.Verb == "get" {
+			getMethod = &SwaggerPathItem{Tags: []string{route.Group},
+				Consumes:   []string{"application/json"},
+				Produces:   []string{"application/json"},
+				Responses:  getDefaultResponse(),
+				Parameters: []SwaggerPathItemParameter{},
+			}
+
+			hasModel := len(swag.Definitions) > 0
+			if hasModel {
+				getMethod.addParameter(SwaggerPathItemParameter{
+					In:       "query",
+					Name:     "status",
+					Required: true,
+					Type:     "string",
+				})
+			}
+		}
+
 		swaggerPathMethods := SwaggerPathMethods{
-			Post: &SwaggerPathItem{Tags: []string{route.Group},
-				Consumes:  []string{"application/json"},
-				Produces:  []string{"application/json"},
-				Responses: defaultResponse,
-				Parameters: []SwaggerPathItemParameter{
-					SwaggerPathItemParameter{
-						In:       "body",
-						Name:     "body",
-						Required: true,
-						Schema:   SwaggerSchema{Ref: "#/definitions/" + str},
-					},
-				},
-			}}
+			Post:   postMethod,
+			Put:    putMethod,
+			Delete: deleteMethod,
+			Get:    getMethod,
+		}
 		swag.addPath(route.Route, swaggerPathMethods)
 
 		out, _ := json.Marshal(swag)

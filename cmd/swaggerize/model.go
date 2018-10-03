@@ -111,6 +111,11 @@ type SwaggerPathItem struct {
 	Security    map[string]SwaggerSecurityDefinition `json:"security,omitempty"`
 }
 
+func (pathItem *SwaggerPathItem) addParameter(parameter SwaggerPathItemParameter) *SwaggerPathItem {
+	pathItem.Parameters = append(pathItem.Parameters, parameter)
+	return pathItem
+}
+
 type SwaggerPathMethods struct {
 	Post   *SwaggerPathItem `json:"post,omitempty"`
 	Get    *SwaggerPathItem `json:"get,omitempty"`
@@ -119,15 +124,15 @@ type SwaggerPathMethods struct {
 }
 
 type SwaggerPathItemParameter struct {
-	Ref         string        `json:"$ref,omitempty"`
-	In          string        `json:"in,omitempty"` //query, header, path, formdata, or body
-	Name        string        `json:"name,omitempty"`
-	Description string        `json:"description,omitempty"`
-	Required    bool          `json:"required,omitempty"`
-	Enum        string        `json:"enum,omitempty"`
-	Type        string        `json:"type,omitempty"`
-	Format      string        `json:"format,omitempty"`
-	Schema      SwaggerSchema `json:"schema,omitempty"`
+	Ref         string         `json:"$ref,omitempty"`
+	In          string         `json:"in,omitempty"` //query, header, path, formdata, or body
+	Name        string         `json:"name,omitempty"`
+	Description string         `json:"description,omitempty"`
+	Required    bool           `json:"required,omitempty"`
+	Enum        string         `json:"enum,omitempty"`
+	Type        string         `json:"type,omitempty"`
+	Format      string         `json:"format,omitempty"`
+	Schema      *SwaggerSchema `json:"schema,omitempty"`
 }
 
 type SwaggerSchema struct {
