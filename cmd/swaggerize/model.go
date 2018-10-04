@@ -124,15 +124,16 @@ type SwaggerPathMethods struct {
 }
 
 type SwaggerPathItemParameter struct {
-	Ref         string         `json:"$ref,omitempty"`
-	In          string         `json:"in,omitempty"` //query, header, path, formdata, or body
-	Name        string         `json:"name,omitempty"`
-	Description string         `json:"description,omitempty"`
-	Required    bool           `json:"required,omitempty"`
-	Enum        string         `json:"enum,omitempty"`
-	Type        string         `json:"type,omitempty"`
-	Format      string         `json:"format,omitempty"`
-	Schema      *SwaggerSchema `json:"schema,omitempty"`
+	Ref              string         `json:"$ref,omitempty"`
+	In               string         `json:"in,omitempty"` //query, header, path, formdata, or body
+	Name             string         `json:"name,omitempty"`
+	Description      string         `json:"description,omitempty"`
+	Required         bool           `json:"required,omitempty"`
+	Enum             []string       `json:"enum,omitempty"`
+	Type             string         `json:"type,omitempty"`
+	Format           string         `json:"format,omitempty"`
+	Schema           *SwaggerSchema `json:"schema,omitempty"`
+	CollectionFormat string         `json:"collectionFormat,omitempty"`
 }
 
 type SwaggerSchema struct {

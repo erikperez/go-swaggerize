@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 type message struct {
@@ -14,8 +15,11 @@ type message struct {
 	Sno         string `json:"sno"`
 }
 
-type getStatus struct {
-	Status []string `json:"status" swagger:"required:true;in:query;multiple:true;enum:['available','pending','sold']"`
+type SwaggerizeOptions struct {
+	Required         bool
+	In               string
+	CollectionFormat string
+	Enum             []string
 }
 
 func main() {
@@ -26,6 +30,7 @@ func main() {
 		// License: &SwaggerLicense{},
 		// Contact: &SwaggerContact{},
 	})
+
 	//Example usage:
 	routes := []SwaggerizeRoute{}
 	routes = append(routes, SwaggerizeRoute{
@@ -52,17 +57,23 @@ type SwaggerizeRoute struct {
 	Model interface{}
 }
 
+type SwaggerRouteDefinition struct {
+	ModelName  *string
+	Definition *SwaggerDefinition
+	Params     []SwaggerPathItemParameter
+}
+
 func swaggerize(swag *SwaggerModel, routes []SwaggerizeRoute) {
 	for _, route := range routes {
 
 		if route.Group != "" {
 			swag.addTag(SwaggerTag{Name: route.Group})
 		}
-		var modelName string
-		// if route.Model != nil {
-		modelName, def := parseStructToDefinition(route.Model)
-		swag.addDefinition(modelName, def)
-		// }
+		routeDefinition := parseStructToDefinition(route.Model)
+		hasModel := routeDefinition.ModelName != nil && routeDefinition.Definition != nil
+		if hasModel {
+			swag.addDefinition(*routeDefinition.ModelName, *routeDefinition.Definition)
+		}
 
 		var postMethod *SwaggerPathItem
 		var getMethod *SwaggerPathItem
@@ -77,13 +88,12 @@ func swaggerize(swag *SwaggerModel, routes []SwaggerizeRoute) {
 				Parameters: []SwaggerPathItemParameter{},
 			}
 
-			hasModel := len(swag.Definitions) > 0
 			if hasModel {
 				postMethod.addParameter(SwaggerPathItemParameter{
 					In:       "body",
 					Name:     "body",
 					Required: true,
-					Schema:   &SwaggerSchema{Ref: "#/definitions/" + modelName},
+					Schema:   &SwaggerSchema{Ref: "#/definitions/" + *routeDefinition.ModelName},
 				})
 			}
 		} else if route.Verb == "get" {
@@ -96,12 +106,15 @@ func swaggerize(swag *SwaggerModel, routes []SwaggerizeRoute) {
 
 			hasModel := len(swag.Definitions) > 0
 			if hasModel {
-				getMethod.addParameter(SwaggerPathItemParameter{
-					In:       "query",
-					Name:     "status",
-					Required: true,
-					Type:     "string",
-				})
+				for i := 0; i < len(routeDefinition.Params); i++ {
+					getMethod.addParameter(SwaggerPathItemParameter{
+						In:       routeDefinition.Params[i].In,
+						Name:     routeDefinition.Params[i].Name,
+						Required: routeDefinition.Params[i].Required,
+						Type:     routeDefinition.Params[i].Type,
+						Enum:     routeDefinition.Params[i].Enum,
+					})
+				}
 			}
 		}
 
@@ -112,11 +125,9 @@ func swaggerize(swag *SwaggerModel, routes []SwaggerizeRoute) {
 			Get:    getMethod,
 		}
 		swag.addPath(route.Route, swaggerPathMethods)
-
-		out, _ := json.Marshal(swag)
-		fmt.Println(string(out))
 	}
-
+	out, _ := json.Marshal(swag)
+	fmt.Println(string(out))
 }
 
 func getDefaultResponse() map[string]SwaggerPathResponse {
@@ -125,45 +136,110 @@ func getDefaultResponse() map[string]SwaggerPathResponse {
 	return defaultResponse
 }
 
-func parseStructToDefinition(v interface{}) (string, SwaggerDefinition) {
+func parseStructToDefinition(v interface{}) SwaggerRouteDefinition {
 	fields := reflect.TypeOf(v)
 	values := reflect.ValueOf(v)
 	name := values.Type().Name()
 	defType := "object"
-	def := SwaggerDefinition{Type: defType}
+
+	routeParams := []SwaggerPathItemParameter{}
+	definition := &SwaggerDefinition{Type: defType}
 
 	for i := 0; i < values.NumField(); i++ {
 		field := fields.Field(i)
 		value := values.Field(i)
+
 		var reflectedType string
 		switch value.Kind() {
 		case reflect.Bool:
 			reflectedType = "boolean"
 		case reflect.String:
-			v := value.String()
-			fmt.Print(v, "\n")
 			reflectedType = "string"
 		case reflect.Int:
-			v := strconv.FormatInt(value.Int(), 10)
-			fmt.Print(v, "\n")
 			reflectedType = "integer"
 		case reflect.Int32:
-			v := strconv.FormatInt(value.Int(), 10)
-			fmt.Print(v, "\n")
 			reflectedType = "integer"
 		case reflect.Int64:
-			v := strconv.FormatInt(value.Int(), 10)
-			fmt.Print(v, "\n")
 			reflectedType = "integer"
 		default:
 			reflectedType = "string"
 		}
 
-		def.addProperty(field.Name, SwaggerDefinitionProperty{
+		prop := SwaggerDefinitionProperty{
 			Type:   reflectedType,
 			Format: field.Type.String(),
-		})
+		}
+
+		tag := field.Tag.Get("swagger")
+		paramOptions := parseParamsOptions(tag)
+		if paramOptions != nil {
+			routeParams = append(routeParams, SwaggerPathItemParameter{
+				Required:         paramOptions.Required,
+				In:               paramOptions.In,
+				CollectionFormat: paramOptions.CollectionFormat,
+				Enum:             paramOptions.Enum,
+				Name:             name,
+				Type:             reflectedType,
+				Format:           field.Type.String(),
+			})
+
+			prop.CollectionFormat = paramOptions.CollectionFormat
+			prop.Enum = paramOptions.Enum
+		}
+
+		definition.addProperty(field.Name, prop)
 	}
 
-	return name, def
+	return SwaggerRouteDefinition{ModelName: &name, Definition: definition, Params: routeParams}
+}
+
+func parseParamsOptions(tag string) *SwaggerizeOptions {
+	if tag == "" {
+		return nil
+	}
+	ret := &SwaggerizeOptions{}
+	splitted := strings.Split(tag, ";")
+	for i := 0; i < len(splitted); i++ {
+		splitVar := strings.Split(splitted[i], ":")
+
+		switch splitVar[0] {
+		case "required":
+			{
+				p, err := strconv.ParseBool(splitVar[1])
+				if err != nil {
+					ret.Required = p
+				}
+				break
+			}
+		case "in":
+			{
+				p := splitVar[1]
+				ret.In = p
+				break
+			}
+		case "multiple":
+			{
+				p, err := strconv.ParseBool(splitVar[1])
+				if err != nil && p {
+					ret.CollectionFormat = "multi"
+				}
+				break
+			}
+		case "enum":
+			{
+				p := splitVar[1]
+				p = p[1 : len(p)-1]
+				ret.Enum = strings.Split(p, ",")
+				break
+			}
+		default:
+			break
+
+		}
+	}
+	return ret
+}
+
+type getStatus struct {
+	Status []string `json:"status" swagger:"required:true;in:query;multiple:true;enum:['available','pending','sold']"`
 }
