@@ -16,6 +16,7 @@ type message struct {
 }
 
 type SwaggerizeOptions struct {
+	Name             string
 	Required         bool
 	In               string
 	CollectionFormat string
@@ -45,6 +46,18 @@ func main() {
 		Verb:  "get",
 		Model: getStatus{},
 	})
+	routes = append(routes, SwaggerizeRoute{
+		Group: "user",
+		Route: "/user/{username}",
+		Verb:  "get",
+		Model: getUser{},
+	})
+	routes = append(routes, SwaggerizeRoute{
+		Group: "user",
+		Route: "/user/{username}",
+		Verb:  "post",
+		Model: putUser{},
+	})
 
 	swaggerize(swag, routes)
 
@@ -66,6 +79,7 @@ type SwaggerRouteDefinition struct {
 func swaggerize(swag *SwaggerModel, routes []SwaggerizeRoute) {
 	for _, route := range routes {
 
+		routeVerb := strings.ToLower(route.Verb)
 		if route.Group != "" {
 			swag.addTag(SwaggerTag{Name: route.Group})
 		}
@@ -80,43 +94,100 @@ func swaggerize(swag *SwaggerModel, routes []SwaggerizeRoute) {
 		var putMethod *SwaggerPathItem
 		var deleteMethod *SwaggerPathItem
 
-		if route.Verb == "post" {
-			postMethod = &SwaggerPathItem{Tags: []string{route.Group},
-				Consumes:   []string{"application/json"},
-				Produces:   []string{"application/json"},
-				Responses:  getDefaultResponse(),
-				Parameters: []SwaggerPathItemParameter{},
-			}
+		var genericMethod = &SwaggerPathItem{Tags: []string{route.Group},
+			Consumes:   []string{},
+			Produces:   []string{},
+			Responses:  getDefaultResponse(),
+			Parameters: []SwaggerPathItemParameter{},
+		}
 
-			if hasModel {
-				postMethod.addParameter(SwaggerPathItemParameter{
-					In:       "body",
-					Name:     "body",
-					Required: true,
-					Schema:   &SwaggerSchema{Ref: "#/definitions/" + *routeDefinition.ModelName},
+		if hasModel && routeVerb != "get" {
+			genericMethod.Produces = append(genericMethod.Produces, "application/json")
+			genericMethod.Consumes = append(genericMethod.Consumes, "application/json")
+			genericMethod.addParameter(SwaggerPathItemParameter{
+				In:       "body",
+				Name:     "body",
+				Required: true,
+				Schema:   &SwaggerSchema{Ref: "#/definitions/" + *routeDefinition.ModelName},
+			})
+		}
+		hasParams := len(routeDefinition.Params) > 0
+		if hasParams {
+			for i := 0; i < len(routeDefinition.Params); i++ {
+				genericMethod.addParameter(SwaggerPathItemParameter{
+					In:       routeDefinition.Params[i].In,
+					Name:     routeDefinition.Params[i].Name,
+					Required: routeDefinition.Params[i].Required,
+					Type:     routeDefinition.Params[i].Type,
+					Enum:     routeDefinition.Params[i].Enum,
 				})
 			}
-		} else if route.Verb == "get" {
-			getMethod = &SwaggerPathItem{Tags: []string{route.Group},
-				Consumes:   []string{"application/json"},
-				Produces:   []string{"application/json"},
-				Responses:  getDefaultResponse(),
-				Parameters: []SwaggerPathItemParameter{},
-			}
-
-			hasModel := len(swag.Definitions) > 0
-			if hasModel {
-				for i := 0; i < len(routeDefinition.Params); i++ {
-					getMethod.addParameter(SwaggerPathItemParameter{
-						In:       routeDefinition.Params[i].In,
-						Name:     routeDefinition.Params[i].Name,
-						Required: routeDefinition.Params[i].Required,
-						Type:     routeDefinition.Params[i].Type,
-						Enum:     routeDefinition.Params[i].Enum,
-					})
-				}
-			}
 		}
+
+		switch routeVerb {
+		case "get":
+			getMethod = genericMethod
+			break
+		case "post":
+			postMethod = genericMethod
+			break
+		case "delete":
+			deleteMethod = genericMethod
+			break
+		case "put":
+			putMethod = genericMethod
+			break
+		}
+
+		// if route.Verb == "post" {
+		// 	postMethod = &SwaggerPathItem{Tags: []string{route.Group},
+		// 		Consumes:   []string{"application/json"},
+		// 		Produces:   []string{"application/json"},
+		// 		Responses:  getDefaultResponse(),
+		// 		Parameters: []SwaggerPathItemParameter{},
+		// 	}
+
+		// 	if hasModel {
+		// 		postMethod.addParameter(SwaggerPathItemParameter{
+		// 			In:       "body",
+		// 			Name:     "body",
+		// 			Required: true,
+		// 			Schema:   &SwaggerSchema{Ref: "#/definitions/" + *routeDefinition.ModelName},
+		// 		})
+		// 	}
+		// 	hasParams := len(routeDefinition.Params) > 0
+		// 	if hasParams {
+		// 		for i := 0; i < len(routeDefinition.Params); i++ {
+		// 			postMethod.addParameter(SwaggerPathItemParameter{
+		// 				In:       routeDefinition.Params[i].In,
+		// 				Name:     routeDefinition.Params[i].Name,
+		// 				Required: routeDefinition.Params[i].Required,
+		// 				Type:     routeDefinition.Params[i].Type,
+		// 				Enum:     routeDefinition.Params[i].Enum,
+		// 			})
+		// 		}
+		// 	}
+		// } else if route.Verb == "get" {
+		// 	getMethod = &SwaggerPathItem{Tags: []string{route.Group},
+		// 		Consumes:   []string{"application/json"},
+		// 		Produces:   []string{"application/json"},
+		// 		Responses:  getDefaultResponse(),
+		// 		Parameters: []SwaggerPathItemParameter{},
+		// 	}
+
+		// 	hasParams := len(routeDefinition.Params) > 0
+		// 	if hasParams {
+		// 		for i := 0; i < len(routeDefinition.Params); i++ {
+		// 			getMethod.addParameter(SwaggerPathItemParameter{
+		// 				In:       routeDefinition.Params[i].In,
+		// 				Name:     routeDefinition.Params[i].Name,
+		// 				Required: routeDefinition.Params[i].Required,
+		// 				Type:     routeDefinition.Params[i].Type,
+		// 				Enum:     routeDefinition.Params[i].Enum,
+		// 			})
+		// 		}
+		// 	}
+		// }
 
 		swaggerPathMethods := SwaggerPathMethods{
 			Post:   postMethod,
@@ -173,17 +244,19 @@ func parseStructToDefinition(v interface{}) SwaggerRouteDefinition {
 		tag := field.Tag.Get("swagger")
 		paramOptions := parseParamsOptions(tag)
 		if paramOptions != nil {
+			paramName := field.Name
+			if paramOptions.Name != "" {
+				paramName = paramOptions.Name
+			}
 			routeParams = append(routeParams, SwaggerPathItemParameter{
 				Required:         paramOptions.Required,
 				In:               paramOptions.In,
 				CollectionFormat: paramOptions.CollectionFormat,
 				Enum:             paramOptions.Enum,
-				Name:             name,
+				Name:             paramName,
 				Type:             reflectedType,
 				Format:           field.Type.String(),
 			})
-
-			prop.CollectionFormat = paramOptions.CollectionFormat
 			prop.Enum = paramOptions.Enum
 		}
 
@@ -206,7 +279,7 @@ func parseParamsOptions(tag string) *SwaggerizeOptions {
 		case "required":
 			{
 				p, err := strconv.ParseBool(splitVar[1])
-				if err != nil {
+				if err == nil {
 					ret.Required = p
 				}
 				break
@@ -220,7 +293,7 @@ func parseParamsOptions(tag string) *SwaggerizeOptions {
 		case "multiple":
 			{
 				p, err := strconv.ParseBool(splitVar[1])
-				if err != nil && p {
+				if err == nil && p {
 					ret.CollectionFormat = "multi"
 				}
 				break
@@ -230,6 +303,12 @@ func parseParamsOptions(tag string) *SwaggerizeOptions {
 				p := splitVar[1]
 				p = p[1 : len(p)-1]
 				ret.Enum = strings.Split(p, ",")
+				break
+			}
+		case "name":
+			{
+				p := splitVar[1]
+				ret.Name = p
 				break
 			}
 		default:
@@ -242,4 +321,13 @@ func parseParamsOptions(tag string) *SwaggerizeOptions {
 
 type getStatus struct {
 	Status []string `json:"status" swagger:"required:true;in:query;multiple:true;enum:['available','pending','sold']"`
+}
+
+type getUser struct {
+	Username string `json:"username" swagger:"required:true;in:path;name:username"`
+}
+
+type putUser struct {
+	Username string `json:"username" swagger:"required:true;in:path;name:username"`
+	Email    string
 }

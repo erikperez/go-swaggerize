@@ -30,9 +30,19 @@ func (s *SwaggerModel) setInfo(info *SwaggerInfo) *SwaggerModel {
 	s.Info = info
 	return s
 }
+func contains(s []SwaggerTag, e SwaggerTag) bool {
+	for _, a := range s {
+		if a.Name == e.Name {
+			return true
+		}
+	}
+	return false
+}
 
 func (s *SwaggerModel) addTag(tag SwaggerTag) *SwaggerModel {
-	s.Tags = append(s.Tags, tag)
+	if !contains(s.Tags, tag) {
+		s.Tags = append(s.Tags, tag)
+	}
 	return s
 }
 func (s *SwaggerModel) setTags(tags []SwaggerTag) *SwaggerModel {
@@ -48,7 +58,20 @@ func (s *SwaggerModel) setDefinitions(definitions map[string]SwaggerDefinition) 
 	return s
 }
 func (s *SwaggerModel) addPath(name string, definition SwaggerPathMethods) *SwaggerModel {
-	s.Paths[name] = definition
+	if val, ok := s.Paths[name]; ok {
+		if definition.Post != nil {
+			val.Post = definition.Post
+		} else if definition.Get != nil {
+			val.Get = definition.Get
+		} else if definition.Put != nil {
+			val.Put = definition.Put
+		} else if definition.Delete != nil {
+			val.Delete = definition.Delete
+		}
+		s.Paths[name] = val
+	} else {
+		s.Paths[name] = definition
+	}
 	return s
 }
 func (s *SwaggerModel) setPaths(paths map[string]SwaggerPathMethods) *SwaggerModel {
@@ -191,7 +214,6 @@ type SwaggerDefinitionProperty struct {
 	Type             string                      `json:"type,omitempty"`
 	Format           string                      `json:"format,omitempty"`
 	Items            []SwaggerDefinitionProperty `json:"items,omitempty"`
-	CollectionFormat string                      `json:"collectionFormat,omitempty"`
 	Default          string                      `json:"default,omitempty"`
 	Maximum          float32                     `json:"maximum,omitempty"`
 	ExclusiveMaximum bool                        `json:"exclusiveMaximum,omitempty"`
