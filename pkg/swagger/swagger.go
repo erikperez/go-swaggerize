@@ -45,10 +45,6 @@ func (s *SwaggerModel) AddTag(tag SwaggerTag) *SwaggerModel {
 	}
 	return s
 }
-func (s *SwaggerModel) setTags(tags []SwaggerTag) *SwaggerModel {
-	s.Tags = tags
-	return s
-}
 func (s *SwaggerModel) AddDefinition(name string, definition SwaggerDefinition) *SwaggerModel {
 	s.Definitions[name] = definition
 	return s

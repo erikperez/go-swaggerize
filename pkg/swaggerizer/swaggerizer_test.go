@@ -7,11 +7,17 @@ import (
 )
 
 func TestSwaggerize(t *testing.T) {
-	swag := swagger.NewSwagger("sms.admin.prisguiden.no", "/")
+	swag := swagger.NewSwagger("myapi.example.com", "/")
 	swag.SetInfo(&swagger.SwaggerInfo{
 		Title: "tester",
-		// License: &SwaggerLicense{},
-		// Contact: &SwaggerContact{},
+		License: &swagger.SwaggerLicense{
+			Name: "Choose a license",
+			URL:  "https://choosealicense.com/",
+		},
+		Contact: &swagger.SwaggerContact{
+			Name: "erikperez",
+			URL:  "github.com/erikperez",
+		},
 	})
 
 	//Example usage:
@@ -57,7 +63,12 @@ func TestSwaggerize(t *testing.T) {
 			},
 		},
 	})
-	o, _ := Swaggerize(swag, routes)
+	o, err := Swaggerize(swag, routes)
+	if err != nil {
+		t.Logf(err.Error())
+		t.Fail()
+		return
+	}
 	t.Logf(o)
 }
 
