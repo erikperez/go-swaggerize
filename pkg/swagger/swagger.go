@@ -1,4 +1,4 @@
-package main
+package swagger
 
 type SwaggerModel struct {
 	Swagger             string                               `json:"swagger"`
@@ -26,7 +26,7 @@ func NewSwagger(host string, basePath string) *SwaggerModel {
 	}
 }
 
-func (s *SwaggerModel) setInfo(info *SwaggerInfo) *SwaggerModel {
+func (s *SwaggerModel) SetInfo(info *SwaggerInfo) *SwaggerModel {
 	s.Info = info
 	return s
 }
@@ -39,7 +39,7 @@ func contains(s []SwaggerTag, e SwaggerTag) bool {
 	return false
 }
 
-func (s *SwaggerModel) addTag(tag SwaggerTag) *SwaggerModel {
+func (s *SwaggerModel) AddTag(tag SwaggerTag) *SwaggerModel {
 	if !contains(s.Tags, tag) {
 		s.Tags = append(s.Tags, tag)
 	}
@@ -49,15 +49,15 @@ func (s *SwaggerModel) setTags(tags []SwaggerTag) *SwaggerModel {
 	s.Tags = tags
 	return s
 }
-func (s *SwaggerModel) addDefinition(name string, definition SwaggerDefinition) *SwaggerModel {
+func (s *SwaggerModel) AddDefinition(name string, definition SwaggerDefinition) *SwaggerModel {
 	s.Definitions[name] = definition
 	return s
 }
-func (s *SwaggerModel) setDefinitions(definitions map[string]SwaggerDefinition) *SwaggerModel {
+func (s *SwaggerModel) SetDefinitions(definitions map[string]SwaggerDefinition) *SwaggerModel {
 	s.Definitions = definitions
 	return s
 }
-func (s *SwaggerModel) addPath(name string, definition SwaggerPathMethods) *SwaggerModel {
+func (s *SwaggerModel) AddPath(name string, definition SwaggerPathMethods) *SwaggerModel {
 	if val, ok := s.Paths[name]; ok {
 		if definition.Post != nil {
 			val.Post = definition.Post
@@ -74,7 +74,7 @@ func (s *SwaggerModel) addPath(name string, definition SwaggerPathMethods) *Swag
 	}
 	return s
 }
-func (s *SwaggerModel) setPaths(paths map[string]SwaggerPathMethods) *SwaggerModel {
+func (s *SwaggerModel) SetPaths(paths map[string]SwaggerPathMethods) *SwaggerModel {
 	s.Paths = paths
 	return s
 }
@@ -114,7 +114,7 @@ type SwaggerPath struct {
 	Verbs map[string]SwaggerPathItem
 }
 
-func (path *SwaggerPath) addVerb(name string, pathItem SwaggerPathItem) *SwaggerPath {
+func (path *SwaggerPath) AddVerb(name string, pathItem SwaggerPathItem) *SwaggerPath {
 	if path.Verbs == nil {
 		path.Verbs = make(map[string]SwaggerPathItem)
 	}
@@ -134,7 +134,7 @@ type SwaggerPathItem struct {
 	Security    map[string]SwaggerSecurityDefinition `json:"security,omitempty"`
 }
 
-func (pathItem *SwaggerPathItem) addParameter(parameter SwaggerPathItemParameter) *SwaggerPathItem {
+func (pathItem *SwaggerPathItem) AddParameter(parameter SwaggerPathItemParameter) *SwaggerPathItem {
 	pathItem.Parameters = append(pathItem.Parameters, parameter)
 	return pathItem
 }
@@ -201,7 +201,7 @@ type SwaggerDefinition struct {
 	XML        SwaggerDefinitionXML                 `json:"xml,omitempty"`
 }
 
-func (definition *SwaggerDefinition) addProperty(name string, prop SwaggerDefinitionProperty) *SwaggerDefinition {
+func (definition *SwaggerDefinition) AddProperty(name string, prop SwaggerDefinitionProperty) *SwaggerDefinition {
 	if definition.Properties == nil {
 		definition.Properties = make(map[string]SwaggerDefinitionProperty)
 	}
