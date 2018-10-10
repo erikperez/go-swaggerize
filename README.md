@@ -21,6 +21,7 @@ A simple converter that takes a defined route with a struct swaggerizes it into 
 |security|\[security requirement object\]||
 |tags|\[tag object\]|x|
 |externalDocs|external documentation object|x|
+Further info can be found here: https://swagger.io/specification/v2/
 
 
 ## Features
