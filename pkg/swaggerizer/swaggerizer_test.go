@@ -8,55 +8,55 @@ import (
 
 func TestSwaggerize(t *testing.T) {
 	swag := swagger.NewSwagger("myapi.example.com", "/")
-	swag.SetInfo(&swagger.SwaggerInfo{
+	swag.SetInfo(&swagger.Info{
 		Title: "My API Example",
-		License: &swagger.SwaggerLicense{
+		License: &swagger.License{
 			Name: "Choose a license",
 			URL:  "https://choosealicense.com/",
 		},
-		Contact: &swagger.SwaggerContact{
+		Contact: &swagger.Contact{
 			Name: "erikperez",
 			URL:  "github.com/erikperez",
 		},
 	})
 
 	//Example usage:
-	routes := []SwaggerizeRoute{}
-	routes = append(routes, SwaggerizeRoute{
+	routes := []Route{}
+	routes = append(routes, Route{
 		Group: "send",
 		Route: "/send/message",
 		Verb:  "post",
 		Model: message{},
 	})
-	routes = append(routes, SwaggerizeRoute{
+	routes = append(routes, Route{
 		Group: "status",
 		Route: "/status",
 		Verb:  "get",
 		Model: getStatus{},
 	})
-	routes = append(routes, SwaggerizeRoute{
+	routes = append(routes, Route{
 		Group: "user",
 		Route: "/user/{username}",
 		Verb:  "get",
 		Model: getUser{},
 	})
-	routes = append(routes, SwaggerizeRoute{
+	routes = append(routes, Route{
 		Group: "user",
 		Route: "/user/{username}",
 		Verb:  "post",
 		Model: putUser{},
 	})
-	routes = append(routes, SwaggerizeRoute{
+	routes = append(routes, Route{
 		Group: "user",
 		Route: "/user/{username}",
 		Verb:  "put",
 		Model: putUser{},
-		Responses: []SwaggerizeResponse{
-			SwaggerizeResponse{
+		Responses: []Response{
+			Response{
 				Name:        "default",
 				Description: "The default response when everything is ok",
 			},
-			SwaggerizeResponse{
+			Response{
 				Name:        "200",
 				Model:       putUserResponse{},
 				Description: "The user has been put",

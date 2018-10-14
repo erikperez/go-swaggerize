@@ -13,19 +13,19 @@ type getStatus struct {
 
 func TestExample(t *testing.T) {
 	swag := swagger.NewSwagger("myapi.example.com", "/")
-	swag.SetInfo(&swagger.SwaggerInfo{
+	swag.SetInfo(&swagger.Info{
 		Title: "My API Example",
-		License: &swagger.SwaggerLicense{
+		License: &swagger.License{
 			Name: "Choose a license",
 			URL:  "https://choosealicense.com/",
 		},
-		Contact: &swagger.SwaggerContact{
+		Contact: &swagger.Contact{
 			Name: "erikperez",
 			URL:  "github.com/erikperez",
 		},
 	})
-	routes := []swaggerizer.SwaggerizeRoute{}
-	routes = append(routes, swaggerizer.SwaggerizeRoute{
+	routes := []swaggerizer.Route{}
+	routes = append(routes, swaggerizer.Route{
 		Group: "status",
 		Route: "/status",
 		Verb:  "get",

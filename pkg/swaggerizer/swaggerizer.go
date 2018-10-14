@@ -9,8 +9,8 @@ import (
 	"github.com/erikperez/go-swaggerize/pkg/swagger"
 )
 
-// Swaggerize converts an array of Routes into a Swagger 2.0 model (swagger.SwaggerModel)
-func Swaggerize(swag *swagger.SwaggerModel, routes []SwaggerizeRoute) (string, error) {
+// Swaggerize converts an array of Routes into a Swagger 2.0 model (swagger.Model)
+func Swaggerize(swag *swagger.Model, routes []Route) (string, error) {
 	for _, route := range routes {
 		routeVerb := strings.ToLower(route.Verb)
 		routeDefinition := parseStructToDefinition(route.Model)
@@ -18,7 +18,7 @@ func Swaggerize(swag *swagger.SwaggerModel, routes []SwaggerizeRoute) (string, e
 		hasModel := routeDefinition.ModelName != nil && routeDefinition.Definition != nil
 
 		if route.Group != "" {
-			swag.AddTag(swagger.SwaggerTag{Name: route.Group})
+			swag.AddTag(swagger.Tag{Name: route.Group})
 		}
 
 		if len(route.Produces) == 0 {
@@ -29,11 +29,11 @@ func Swaggerize(swag *swagger.SwaggerModel, routes []SwaggerizeRoute) (string, e
 			route.Consumes = append(route.Consumes, "application/json")
 		}
 
-		var genericMethod = &swagger.SwaggerPathItem{
+		var genericMethod = &swagger.PathItem{
 			Tags:       []string{route.Group},
 			Consumes:   []string{},
 			Produces:   []string{},
-			Parameters: []swagger.SwaggerPathItemParameter{},
+			Parameters: []swagger.PathItemParameter{},
 		}
 
 		responses, responseDefinitions := parseResponses(route.Responses)
@@ -49,18 +49,18 @@ func Swaggerize(swag *swagger.SwaggerModel, routes []SwaggerizeRoute) (string, e
 				genericMethod.Produces = route.Produces
 				genericMethod.Consumes = route.Consumes
 
-				genericMethod.AddParameter(swagger.SwaggerPathItemParameter{
+				genericMethod.AddParameter(swagger.PathItemParameter{
 					In:       "body",
 					Name:     "body",
 					Required: true,
-					Schema:   &swagger.SwaggerSchema{Ref: "#/definitions/" + *routeDefinition.ModelName},
+					Schema:   &swagger.Schema{Ref: "#/definitions/" + *routeDefinition.ModelName},
 				})
 			}
 		}
 
 		if hasParams {
 			for i := 0; i < len(routeDefinition.Params); i++ {
-				genericMethod.AddParameter(swagger.SwaggerPathItemParameter{
+				genericMethod.AddParameter(swagger.PathItemParameter{
 					In:       routeDefinition.Params[i].In,
 					Name:     routeDefinition.Params[i].Name,
 					Required: routeDefinition.Params[i].Required,
@@ -70,10 +70,10 @@ func Swaggerize(swag *swagger.SwaggerModel, routes []SwaggerizeRoute) (string, e
 			}
 		}
 
-		var postMethod *swagger.SwaggerPathItem
-		var getMethod *swagger.SwaggerPathItem
-		var putMethod *swagger.SwaggerPathItem
-		var deleteMethod *swagger.SwaggerPathItem
+		var postMethod *swagger.PathItem
+		var getMethod *swagger.PathItem
+		var putMethod *swagger.PathItem
+		var deleteMethod *swagger.PathItem
 
 		switch routeVerb {
 		case "get":
@@ -90,7 +90,7 @@ func Swaggerize(swag *swagger.SwaggerModel, routes []SwaggerizeRoute) (string, e
 			break
 		}
 
-		swaggerPathMethods := swagger.SwaggerPathMethods{
+		swaggerPathMethods := swagger.PathMethods{
 			Post:   postMethod,
 			Put:    putMethod,
 			Delete: deleteMethod,
@@ -98,30 +98,31 @@ func Swaggerize(swag *swagger.SwaggerModel, routes []SwaggerizeRoute) (string, e
 		}
 		swag.AddPath(route.Route, swaggerPathMethods)
 	}
-	if out, err := json.Marshal(swag); err != nil {
+	out, err := json.Marshal(swag)
+	if err != nil {
 		return "", err
-	} else {
-		return string(out), nil
 	}
+
+	return string(out), nil
 }
 
-func parseResponses(responses []SwaggerizeResponse) (map[string]swagger.SwaggerPathResponse, []swaggerizeResponseDefinition) {
-	ret := make(map[string]swagger.SwaggerPathResponse)
-	definitions := []swaggerizeResponseDefinition{}
+func parseResponses(responses []Response) (map[string]swagger.PathResponse, []responseDefinition) {
+	ret := make(map[string]swagger.PathResponse)
+	definitions := []responseDefinition{}
 	if len(responses) == 0 {
-		ret["default"] = swagger.SwaggerPathResponse{Description: "Default response"}
+		ret["default"] = swagger.PathResponse{Description: "Default response"}
 	} else {
 		for i := 0; i < len(responses); i++ {
 			response := responses[i]
-			resp := swagger.SwaggerPathResponse{Description: response.Description}
+			resp := swagger.PathResponse{Description: response.Description}
 			if response.Model != nil {
 				m := parseStructToDefinition(response.Model)
 				if m.Definition != nil {
-					definitions = append(definitions, swaggerizeResponseDefinition{
+					definitions = append(definitions, responseDefinition{
 						Definition: m.Definition,
 						ModelName:  m.ModelName,
 					})
-					resp.Schema = swagger.SwaggerSchema{Ref: "#/definitions/" + *m.ModelName}
+					resp.Schema = swagger.Schema{Ref: "#/definitions/" + *m.ModelName}
 				}
 			}
 			ret[response.Name] = resp
@@ -130,14 +131,14 @@ func parseResponses(responses []SwaggerizeResponse) (map[string]swagger.SwaggerP
 	return ret, definitions
 }
 
-func parseStructToDefinition(v interface{}) swaggerizeRouteDefinition {
+func parseStructToDefinition(v interface{}) routeDefinition {
 	fields := reflect.TypeOf(v)
 	values := reflect.ValueOf(v)
 	structName := values.Type().Name()
 	defType := "object"
 
-	routeParams := []swagger.SwaggerPathItemParameter{}
-	definition := &swagger.SwaggerDefinition{Type: defType}
+	routeParams := []swagger.PathItemParameter{}
+	definition := &swagger.Definition{Type: defType}
 
 	for i := 0; i < values.NumField(); i++ {
 		field := fields.Field(i)
@@ -171,7 +172,7 @@ func parseStructToDefinition(v interface{}) swaggerizeRouteDefinition {
 			reflectedFormat = strings.ToLower(field.Type.String())
 		}
 
-		prop := swagger.SwaggerDefinitionProperty{
+		prop := swagger.DefinitionProperty{
 			Type:   reflectedType,
 			Format: reflectedFormat,
 		}
@@ -185,7 +186,7 @@ func parseStructToDefinition(v interface{}) swaggerizeRouteDefinition {
 				paramName = paramOptions.Name
 			}
 
-			routeParams = append(routeParams, swagger.SwaggerPathItemParameter{
+			routeParams = append(routeParams, swagger.PathItemParameter{
 				Required:         paramOptions.Required,
 				In:               paramOptions.In,
 				CollectionFormat: paramOptions.CollectionFormat,
@@ -200,14 +201,14 @@ func parseStructToDefinition(v interface{}) swaggerizeRouteDefinition {
 		definition.AddProperty(paramName, prop)
 	}
 
-	return swaggerizeRouteDefinition{ModelName: &structName, Definition: definition, Params: routeParams}
+	return routeDefinition{ModelName: &structName, Definition: definition, Params: routeParams}
 }
 
-func parseParamsOptions(tag string) *swaggerizeOptions {
+func parseParamsOptions(tag string) *options {
 	if tag == "" {
 		return nil
 	}
-	ret := &swaggerizeOptions{}
+	ret := &options{}
 	splitted := strings.Split(tag, ";")
 	for i := 0; i < len(splitted); i++ {
 		splitVar := strings.Split(splitted[i], ":")
