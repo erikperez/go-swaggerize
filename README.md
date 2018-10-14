@@ -21,6 +21,7 @@ A simple converter that takes a defined route with a struct swaggerizes it into 
 |security|\[security requirement object\]||
 |tags|\[tag object\]|x|
 |externalDocs|external documentation object|x|
+
 Further info can be found here: https://swagger.io/specification/v2/
 
 
@@ -56,7 +57,7 @@ type getStatusRequest struct {
 ```
 swag := swagger.NewSwagger("api.example.com", "/v1")
 	swag.SetInfo(&swagger.SwaggerInfo{
-		Title: "tester",
+		Title: "My API Example",
 		License: &swagger.SwaggerLicense{
 			Name: "Choose a license",
 			URL:  "https://choosealicense.com/",
@@ -78,3 +79,5 @@ swag := swagger.NewSwagger("api.example.com", "/v1")
 	o, err := Swaggerize(swag, routes)
 	//o is now your swagger.json
 ```
+
+![Swagger Example](docs/Example_Swagger.png)
