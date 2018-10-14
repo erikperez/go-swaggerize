@@ -9,7 +9,7 @@ import (
 	"github.com/erikperez/go-swaggerize/pkg/swagger"
 )
 
-// Swaggerize converts an array of Routes into Swagger 2.0 model
+// Swaggerize converts an array of Routes into a Swagger 2.0 model (swagger.SwaggerModel)
 func Swaggerize(swag *swagger.SwaggerModel, routes []SwaggerizeRoute) (string, error) {
 	for _, route := range routes {
 		routeVerb := strings.ToLower(route.Verb)

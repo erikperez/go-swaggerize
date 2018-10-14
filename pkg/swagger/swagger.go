@@ -1,5 +1,6 @@
 package swagger
 
+// SwaggerModel is the struct of the swagger spec
 type SwaggerModel struct {
 	Swagger             string                               `json:"swagger"`
 	Info                *SwaggerInfo                         `json:"info"`
@@ -13,6 +14,7 @@ type SwaggerModel struct {
 	ExternalDocs        *SwaggerExternalDocs                 `json:"externalDocs,omitempty"`
 }
 
+// NewSwagger creates an instance of SwaggerModel
 func NewSwagger(host string, basePath string) *SwaggerModel {
 	return &SwaggerModel{
 		Swagger:             "2.0",
@@ -26,6 +28,7 @@ func NewSwagger(host string, basePath string) *SwaggerModel {
 	}
 }
 
+// SetInfo sets the info on the swagger model.
 func (s *SwaggerModel) SetInfo(info *SwaggerInfo) *SwaggerModel {
 	s.Info = info
 	return s
@@ -39,20 +42,27 @@ func contains(s []SwaggerTag, e SwaggerTag) bool {
 	return false
 }
 
+// AddTag adds a tag if it does not exist
 func (s *SwaggerModel) AddTag(tag SwaggerTag) *SwaggerModel {
 	if !contains(s.Tags, tag) {
 		s.Tags = append(s.Tags, tag)
 	}
 	return s
 }
+
+// AddDefinition set a definition on SwaggerModel.Definitions map. Name is used as key.
 func (s *SwaggerModel) AddDefinition(name string, definition SwaggerDefinition) *SwaggerModel {
 	s.Definitions[name] = definition
 	return s
 }
+
+// SetDefinitions sets the SwaggerModel.Definitions map.
 func (s *SwaggerModel) SetDefinitions(definitions map[string]SwaggerDefinition) *SwaggerModel {
 	s.Definitions = definitions
 	return s
 }
+
+// AddPath adds SwaggerPathMethods on a path's name. Supports: Get, Post, Put, Delete
 func (s *SwaggerModel) AddPath(name string, definition SwaggerPathMethods) *SwaggerModel {
 	if val, ok := s.Paths[name]; ok {
 		if definition.Post != nil {
@@ -70,11 +80,13 @@ func (s *SwaggerModel) AddPath(name string, definition SwaggerPathMethods) *Swag
 	}
 	return s
 }
+
 func (s *SwaggerModel) SetPaths(paths map[string]SwaggerPathMethods) *SwaggerModel {
 	s.Paths = paths
 	return s
 }
 
+// SwaggerInfo is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerInfo struct {
 	Description    string          `json:"description"`
 	Version        string          `json:"version"`
@@ -84,28 +96,33 @@ type SwaggerInfo struct {
 	License        *SwaggerLicense `json:"license,omitempty"`
 }
 
+// SwaggerContact is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerContact struct {
 	Name  string `json:"name,omitempty"`
 	Email string `json:"email,omitempty"`
 	URL   string `json:"url,omitempty"`
 }
 
+// SwaggerLicense is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerLicense struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }
 
+// SwaggerTag is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerTag struct {
 	Name         string               `json:"name,omitempty"`
 	Description  string               `json:"description,omitempty"`
 	ExternalDocs *SwaggerExternalDocs `json:"externalDocs,omitempty"`
 }
 
+// SwaggerExternalDocs is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerExternalDocs struct {
 	Description string `json:"description,omitempty"`
 	URL         string `json:"url,omitempty"`
 }
 
+// SwaggerPath is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerPath struct {
 	Verbs map[string]SwaggerPathItem
 }
@@ -118,6 +135,7 @@ func (path *SwaggerPath) AddVerb(name string, pathItem SwaggerPathItem) *Swagger
 	return path
 }
 
+// SwaggerPathItem is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerPathItem struct {
 	Tags        []string                             `json:"tags,omitempty"`
 	Summary     string                               `json:"summary,omitempty"`
@@ -130,11 +148,13 @@ type SwaggerPathItem struct {
 	Security    map[string]SwaggerSecurityDefinition `json:"security,omitempty"`
 }
 
+// AddParameter adds a SwaggerPathItemParameter on a SwaggerPathItems' parameter
 func (pathItem *SwaggerPathItem) AddParameter(parameter SwaggerPathItemParameter) *SwaggerPathItem {
 	pathItem.Parameters = append(pathItem.Parameters, parameter)
 	return pathItem
 }
 
+// SwaggerPathMethods is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerPathMethods struct {
 	Post   *SwaggerPathItem `json:"post,omitempty"`
 	Get    *SwaggerPathItem `json:"get,omitempty"`
@@ -142,6 +162,7 @@ type SwaggerPathMethods struct {
 	Delete *SwaggerPathItem `json:"delete,omitempty"`
 }
 
+// SwaggerPathItemParameter is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerPathItemParameter struct {
 	Ref              string         `json:"$ref,omitempty"`
 	In               string         `json:"in,omitempty"` //query, header, path, formdata, or body
@@ -155,6 +176,7 @@ type SwaggerPathItemParameter struct {
 	CollectionFormat string         `json:"collectionFormat,omitempty"`
 }
 
+// SwaggerSchema is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerSchema struct {
 	Ref              string  `json:"$ref,omitempty"`
 	Format           string  `json:"format,omitempty"`
@@ -166,6 +188,7 @@ type SwaggerSchema struct {
 	ExclusiveMaximum bool    `json:"exclusiveMaximum,omitempty"`
 }
 
+// SwaggerPathResponse is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerPathResponse struct {
 	Ref         string                   `json:"$ref,omitempty"`
 	Description string                   `json:"description,omitempty"`
@@ -174,6 +197,7 @@ type SwaggerPathResponse struct {
 	Examples    []string                 `json:"examples,omitempty"`
 }
 
+// SwaggerHeader is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerHeader struct {
 	Ref         string `json:"$ref,omitempty"`
 	Type        string `json:"type,omitempty"`
@@ -181,6 +205,7 @@ type SwaggerHeader struct {
 	Description string `json:"description,omitempty"`
 }
 
+// SwaggerSecurityDefinition is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerSecurityDefinition struct {
 	Type             string            `json:"type,omitempty"`
 	Name             string            `json:"name,omitempty"`
@@ -191,12 +216,14 @@ type SwaggerSecurityDefinition struct {
 	Scopes           map[string]string `json:"scopes,omitempty"`
 }
 
+// SwaggerDefinition is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerDefinition struct {
 	Type       string                               `json:"type,omitempty"`
 	Properties map[string]SwaggerDefinitionProperty `json:"properties,omitempty"`
 	XML        SwaggerDefinitionXML                 `json:"xml,omitempty"`
 }
 
+// AddProperty is used to add a property to a swagger route definition
 func (definition *SwaggerDefinition) AddProperty(name string, prop SwaggerDefinitionProperty) *SwaggerDefinition {
 	if definition.Properties == nil {
 		definition.Properties = make(map[string]SwaggerDefinitionProperty)
@@ -205,6 +232,7 @@ func (definition *SwaggerDefinition) AddProperty(name string, prop SwaggerDefini
 	return definition
 }
 
+// SwaggerDefinitionProperty is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerDefinitionProperty struct {
 	Ref              string                      `json:"$ref,omitempty"`
 	Type             string                      `json:"type,omitempty"`
@@ -224,6 +252,7 @@ type SwaggerDefinitionProperty struct {
 	Enum             []string                    `json:"enum,omitempty"`
 }
 
+// SwaggerDefinitionXML is a holder object used to define the swagger spec and serialize to JSON
 type SwaggerDefinitionXML struct {
 	Name      string `json:"name,omitempty"`
 	Namespace string `json:"namespace,omitempty"`
