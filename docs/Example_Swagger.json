@@ -1,0 +1,69 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "",
+        "version": "",
+        "title": "My API Example",
+        "contact": {
+            "name": "erikperez",
+            "url": "github.com/erikperez"
+        },
+        "license": {
+            "name": "Choose a license",
+            "url": "https://choosealicense.com/"
+        }
+    },
+    "host": "myapi.example.com",
+    "basePath": "/",
+    "tags": [
+        {
+            "name": "status"
+        }
+    ],
+    "schemes": [],
+    "paths": {
+        "/status": {
+            "get": {
+                "tags": [
+                    "status"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "Status",
+                        "required": true,
+                        "enum": [
+                            "available",
+                            "pending",
+                            "sold"
+                        ],
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": "Default response",
+                        "schema": {}
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "getStatusRequest": {
+            "type": "object",
+            "properties": {
+                "Status": {
+                    "type": "string",
+                    "format": "[]string",
+                    "enum": [
+                        "available",
+                        "pending",
+                        "sold"
+                    ]
+                }
+            },
+            "xml": {}
+        }
+    }
+}

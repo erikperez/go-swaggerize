@@ -9,7 +9,7 @@ import (
 func TestSwaggerize(t *testing.T) {
 	swag := swagger.NewSwagger("myapi.example.com", "/")
 	swag.SetInfo(&swagger.SwaggerInfo{
-		Title: "tester",
+		Title: "My API Example",
 		License: &swagger.SwaggerLicense{
 			Name: "Choose a license",
 			URL:  "https://choosealicense.com/",
