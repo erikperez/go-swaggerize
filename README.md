@@ -1,7 +1,7 @@
+[![CircleCI](https://circleci.com/gh/erikperez/go-swaggerize/tree/master.svg?style=svg)](https://circleci.com/gh/erikperez/go-swaggerize/tree/master)
+
 # go-swaggerize
 A simple converter that takes a defined route with a struct swaggerizes it into a Swagger 2.0 valid `swagger.json`
-
-[![CircleCI](https://circleci.com/gh/erikperez/go-swaggerize/tree/master.svg?style=svg)](https://circleci.com/gh/erikperez/go-swaggerize/tree/master)
 
 ## Swagger spec support
 | Field Name  | Type   | Support  |
@@ -39,22 +39,12 @@ Further info can be found here: https://swagger.io/specification/v2/
 * * * Supports defining response models using structs
 * * Define struct properties to be used using swagger tags
 
-### Example of how to define a struct with swagger tags
-```
-type getStatusRequest struct {
-	Status []string `json:"status" swagger:"required:true;in:query;multiple:true;enum:['available','pending','sold']"`
-}
-```
-
-### Supported struct tags
-* required
-* in
-* multiple
-* enum
-* name
-
 ### Working example
 ```
+type getStatusRequest struct {
+	Status []string `swagger:"required:true;in:query;multiple:true;enum:['available','pending','sold']"`
+}
+
 swag := swagger.NewSwagger("api.example.com", "/v1")
 	swag.SetInfo(&swagger.SwaggerInfo{
 		Title: "My API Example",
@@ -81,3 +71,10 @@ swag := swagger.NewSwagger("api.example.com", "/v1")
 ```
 
 ![Swagger Example](docs/Example_Swagger.png)
+
+### Supported struct tags
+* required
+* in
+* multiple
+* enum
+* name
